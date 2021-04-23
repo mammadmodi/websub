@@ -31,7 +31,14 @@ func EventSocket(w http.ResponseWriter, r *http.Request) {
 		logrus.Error("upgrade:", err)
 		return
 	}
-	defer c.Close()
+
+	defer func() {
+		err := c.Close()
+		if err != nil {
+			logrus.WithField("error", err).Fatal("error while closing ws connection")
+		}
+	}()
+
 	for {
 		mt, message, err := c.ReadMessage()
 		if err != nil {
