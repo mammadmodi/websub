@@ -1,16 +1,19 @@
 package ws
 
 import (
+	"context"
 	"flag"
+	"github.com/gorilla/websocket"
+	"github.com/sirupsen/logrus"
 	"html/template"
 	"log"
 	"net/http"
-
-	"github.com/gorilla/websocket"
-	"github.com/sirupsen/logrus"
 )
 
-func ServeWS() error {
+var eventSource *RedisEventSource
+
+func ServeWS(es *RedisEventSource) error {
+	eventSource = es
 	var addr = flag.String("addr", "localhost:8080", "http service address")
 	flag.Parse()
 	log.SetFlags(0)
@@ -25,7 +28,13 @@ func ServeWS() error {
 var upgrader = websocket.Upgrader{} // use default options
 
 func EventSocket(w http.ResponseWriter, r *http.Request) {
-	logrus.WithField("query", r.URL.Query()).Info("request received")
+	username := r.URL.Query().Get("name")
+	if username == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	logrus.WithField("username", username).Info("request received for user")
 	c, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		logrus.Error("upgrade:", err)
@@ -39,24 +48,51 @@ func EventSocket(w http.ResponseWriter, r *http.Request) {
 		}
 	}()
 
+	logrus.WithField("username", username).Info("connection created for user")
+
+	messageChan, closer, err := eventSource.Subscribe(context.Background(), username)
+	if err != nil {
+		logrus.WithField("err", err).Error("error while subscription")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	defer closer()
+	logrus.WithField("username", username).Info("subscription created for user")
+
+	// pass redis messages to user
+	go func() {
+		for msg := range messageChan {
+			logrus.
+				WithField("channel", msg.Channel).
+				WithField("payload", msg.Payload).
+				Info("message received from redis")
+
+			err = c.WriteMessage(1, []byte(msg.Payload))
+			if err != nil {
+				logrus.WithField("error", err).Error("error while sending message to user")
+				break
+			}
+		}
+	}()
+
+	// read user sent messages
 	for {
 		mt, message, err := c.ReadMessage()
 		if err != nil {
 			log.Println("read:", err)
 			break
 		}
-		log.Printf("recv: %s", message)
-		err = c.WriteMessage(mt, message)
-		if err != nil {
-			log.Println("write:", err)
-			break
-		}
+
+		logrus.
+			WithField("message_type", mt).
+			WithField("received_message", string(message)).
+			Info("message received from user")
 	}
 }
 
 func Home(w http.ResponseWriter, r *http.Request) {
 	name := r.URL.Query().Get("name")
-	logrus.Infof("name is %s", name)
 	if err := homeTemplate.Execute(w, "ws://"+"127.0.0.1:8080/event?name="+name); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
