@@ -1,4 +1,3 @@
 configs/*.yaml
 vendor/
 .idea
-webis

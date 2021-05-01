@@ -2,32 +2,31 @@ package ws
 
 import (
 	"context"
-	"flag"
+	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
+	"github.com/mammadmodi/webis/internal/source"
 	"github.com/sirupsen/logrus"
 	"html/template"
 	"log"
 	"net/http"
 )
 
-var eventSource *RedisEventSource
-
-func ServeWS(es *RedisEventSource) error {
-	eventSource = es
-	var addr = flag.String("addr", "localhost:8080", "http service address")
-	flag.Parse()
-	log.SetFlags(0)
-
-	http.HandleFunc("/", Home)
-	http.HandleFunc("/event", EventSocket)
-
-	err := http.ListenAndServe(*addr, nil)
-	return err
+type SocketManager struct {
+	Source     *source.RedisSource
+	wsUpgrader *websocket.Upgrader
 }
 
-var upgrader = websocket.Upgrader{} // use default options
+func NewSocketManager(redisSource *source.RedisSource) *SocketManager {
+	m := &SocketManager{
+		Source:     redisSource,
+		wsUpgrader: &websocket.Upgrader{},
+	}
+	return m
+}
 
-func EventSocket(w http.ResponseWriter, r *http.Request) {
+func (m *SocketManager) Socket(ctx *gin.Context) {
+	r := ctx.Request
+	w := ctx.Writer
 	username := r.URL.Query().Get("name")
 	if username == "" {
 		w.WriteHeader(http.StatusBadRequest)
@@ -35,7 +34,7 @@ func EventSocket(w http.ResponseWriter, r *http.Request) {
 	}
 
 	logrus.WithField("username", username).Info("request received for user")
-	c, err := upgrader.Upgrade(w, r, nil)
+	c, err := m.wsUpgrader.Upgrade(w, r, nil)
 	if err != nil {
 		logrus.Error("upgrade:", err)
 		return
@@ -50,7 +49,7 @@ func EventSocket(w http.ResponseWriter, r *http.Request) {
 
 	logrus.WithField("username", username).Info("connection created for user")
 
-	messageChan, closer, err := eventSource.Subscribe(context.Background(), username)
+	messageChan, closer, err := m.Source.Subscribe(context.Background(), username)
 	if err != nil {
 		logrus.WithField("err", err).Error("error while subscription")
 		w.WriteHeader(http.StatusInternalServerError)
@@ -91,13 +90,13 @@ func EventSocket(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func Home(w http.ResponseWriter, r *http.Request) {
-	name := r.URL.Query().Get("name")
-	if err := homeTemplate.Execute(w, "ws://"+"127.0.0.1:8080/event?name="+name); err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+func Home(ctx *gin.Context) {
+	name := ctx.Request.URL.Query().Get("name")
+	if err := homeTemplate.Execute(ctx.Writer, "ws://"+"127.0.0.1:8379/v1/socket/connect?name="+name); err != nil {
+		ctx.Writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	w.WriteHeader(http.StatusOK)
+	ctx.Writer.WriteHeader(http.StatusOK)
 }
 
 var homeTemplate = template.Must(template.New("").Parse(`

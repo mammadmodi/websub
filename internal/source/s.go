@@ -1,4 +1,4 @@
-package ws
+package source
 
 import (
 	"context"
@@ -6,11 +6,11 @@ import (
 	"github.com/go-redis/redis"
 )
 
-type RedisEventSource struct {
+type RedisSource struct {
 	Client redis.UniversalClient
 }
 
-func (r RedisEventSource) Subscribe(ctx context.Context, username string) (<-chan *redis.Message, func(), error) {
+func (r RedisSource) Subscribe(ctx context.Context, username string) (<-chan *redis.Message, func(), error) {
 	ps := r.Client.Subscribe(fmt.Sprintf("events/%s", username))
 
 	ch := ps.Channel()
