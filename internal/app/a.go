@@ -72,7 +72,7 @@ func (a *App) initRouter() *gin.Engine {
 	//r.GET("/metrics", a.Handler.MetricsMiddleware, gin.WrapH(promhttp.Handler()))
 	//r.GET("/v1/socket", a.Handler.ResolveAckMiddleware, a.Handler.Ack)
 
-	r.GET("/v1/socket/form", ws.Home)
+	r.GET("/v1/socket/form", a.Home)
 	r.GET("/v1/socket/connect", a.WSManager.Socket)
 
 	return r
