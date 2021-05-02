@@ -22,9 +22,9 @@ Build Date: __build_date__
 
 // App is a type that serves webis functionality
 type App struct {
-	Config    *Configs
-	Logger    *logrus.Logger
-	WSManager *ws.SocketManager
+	Config  *Configs
+	Logger  *logrus.Logger
+	SockHub *ws.SockHub
 
 	server *http.Server
 }
@@ -73,7 +73,7 @@ func (a *App) initRouter() *gin.Engine {
 	//r.GET("/v1/socket", a.Handler.ResolveAckMiddleware, a.Handler.Ack)
 
 	r.GET("/v1/socket/form", a.Home)
-	r.GET("/v1/socket/connect", a.WSManager.Socket)
+	r.GET("/v1/socket/connect", a.SockHub.Socket)
 
 	return r
 }

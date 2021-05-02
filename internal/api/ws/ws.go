@@ -2,28 +2,29 @@ package ws
 
 import (
 	"context"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
-	"github.com/mammadmodi/webis/internal/source"
+	"github.com/mammadmodi/webis/internal/hub"
 	"github.com/sirupsen/logrus"
 	"log"
 	"net/http"
 )
 
-type SocketManager struct {
-	Source     *source.RedisSource
-	wsUpgrader *websocket.Upgrader
+type SockHub struct {
+	Hub      *hub.RedisHub
+	upgrader *websocket.Upgrader
 }
 
-func NewSocketManager(redisSource *source.RedisSource) *SocketManager {
-	m := &SocketManager{
-		Source:     redisSource,
-		wsUpgrader: &websocket.Upgrader{},
+func NewSockHub(redisHub *hub.RedisHub) *SockHub {
+	m := &SockHub{
+		Hub:      redisHub,
+		upgrader: &websocket.Upgrader{},
 	}
 	return m
 }
 
-func (m *SocketManager) Socket(ctx *gin.Context) {
+func (m *SockHub) Socket(ctx *gin.Context) {
 	r := ctx.Request
 	w := ctx.Writer
 	username := r.URL.Query().Get("username")
@@ -33,7 +34,7 @@ func (m *SocketManager) Socket(ctx *gin.Context) {
 	}
 
 	logrus.WithField("username", username).Info("request received for user")
-	c, err := m.wsUpgrader.Upgrade(w, r, nil)
+	c, err := m.upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		logrus.Error("upgrade:", err)
 		return
@@ -48,7 +49,7 @@ func (m *SocketManager) Socket(ctx *gin.Context) {
 
 	logrus.WithField("username", username).Info("connection created for user")
 
-	messageChan, closer, err := m.Source.Subscribe(context.Background(), username)
+	messageChan, closer, err := m.Hub.Subscribe(context.Background(), fmt.Sprintf("events/%s", username))
 	if err != nil {
 		logrus.WithField("err", err).Error("error while subscription")
 		w.WriteHeader(http.StatusInternalServerError)

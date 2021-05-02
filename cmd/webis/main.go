@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"github.com/mammadmodi/webis/internal/api/ws"
 	"github.com/mammadmodi/webis/internal/app"
-	"github.com/mammadmodi/webis/internal/source"
+	"github.com/mammadmodi/webis/internal/hub"
 	"github.com/mammadmodi/webis/pkg/logger"
 	"github.com/mammadmodi/webis/pkg/redis"
 	"github.com/sirupsen/logrus"
@@ -54,13 +54,14 @@ func init() {
 		l.Fatalf("cannot get ping response with redis client, error: %v", err)
 	}
 
-	redisSource := &source.RedisSource{Client: rc}
-	wsManager := ws.NewSocketManager(redisSource)
+	rh := hub.NewRedisHub(rc, hub.RedisHubConfig{})
+	sh := ws.NewSockHub(rh)
+
 	// initializing application instance
 	a = &app.App{
-		Config:    c,
-		Logger:    l,
-		WSManager: wsManager,
+		Config:  c,
+		Logger:  l,
+		SockHub: sh,
 	}
 }
 
