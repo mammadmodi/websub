@@ -65,6 +65,7 @@ func (m *SockHub) Socket(ctx *gin.Context) {
 		for _, s := range subs {
 			s.Closer()
 		}
+		logrus.WithField("username", un).Info("redis subscriptions closed successfully")
 	}()
 
 	go writer(un, wsConn, subs)
