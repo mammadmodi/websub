@@ -1,29 +1,60 @@
 package ws
 
 import (
+	"context"
+	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
+	"github.com/kelseyhightower/envconfig"
 	"github.com/mammadmodi/webis/internal/hub"
 	"github.com/sirupsen/logrus"
 	"net/http"
 	"strings"
+	"time"
 )
 
+type Configuration struct {
+	PingInterval time.Duration `default:"4s" split_words:"true"`
+	PongWait     time.Duration `default:"6s" split_words:"true"`
+	WriteWait    time.Duration `default:"4s" split_words:"true"`
+	ReadLimit    int64         `default:"4096" split_words:"true"`
+}
+
+// GetConfigFromEnv tries to generate configuration from related
+// environment variables with power of "kelseyhightower" library.
+func GetConfigFromEnv(prefix string) (Configuration, error) {
+	config := Configuration{}
+	if err := envconfig.Process(prefix, &config); err != nil {
+		return config, fmt.Errorf("error while loading configs from env variables, error: %v", err)
+	}
+
+	return config, nil
+}
+
 type SockHub struct {
-	Hub      *hub.RedisHub
+	Hub    *hub.RedisHub
+	Config Configuration
+
 	upgrader *websocket.Upgrader
 }
 
-func NewSockHub(redisHub *hub.RedisHub) *SockHub {
+type ClientMessage struct {
+	Body  string `json:"body"`
+	Topic string `json:"topic"`
+}
+
+func NewSockHub(config Configuration, redisHub *hub.RedisHub) *SockHub {
 	m := &SockHub{
 		Hub:      redisHub,
+		Config:   config,
 		upgrader: &websocket.Upgrader{},
 	}
 	return m
 }
 
-func (m *SockHub) Socket(ctx *gin.Context) {
+func (h *SockHub) Socket(ctx *gin.Context) {
 	r := ctx.Request
 	w := ctx.Writer
 
@@ -38,7 +69,7 @@ func (m *SockHub) Socket(ctx *gin.Context) {
 	topics := strings.Split(r.URL.Query().Get("topics"), ",")
 
 	// upgrade connection
-	wsConn, err := m.upgrader.Upgrade(w, r, nil)
+	wsConn, err := h.upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		logrus.WithField("error", err).WithField("username", un).Error("upgrade error")
 		return
@@ -48,12 +79,13 @@ func (m *SockHub) Socket(ctx *gin.Context) {
 	defer func() {
 		err := wsConn.Close()
 		if err != nil {
-			logrus.WithField("error", err).Fatal("error while closing ws connection")
+			logrus.WithField("error", err).Error("error while closing ws connection")
 		}
+		logrus.WithField("username", un).Info("socket connection closed")
 	}()
 
 	// create subscription for user topics
-	subs, err := m.Hub.BatchSubscribe(r.Context(), topics)
+	subs, err := h.Hub.BatchSubscribe(r.Context(), topics)
 	if err != nil {
 		logrus.WithField("username", un).Info("subscriptions failed for user")
 		w.WriteHeader(http.StatusInternalServerError)
@@ -68,30 +100,78 @@ func (m *SockHub) Socket(ctx *gin.Context) {
 		logrus.WithField("username", un).Info("redis subscriptions closed successfully")
 	}()
 
-	go writer(un, wsConn, subs)
-	reader(wsConn)
+	pingTicker := time.NewTicker(h.Config.PingInterval)
+	defer pingTicker.Stop()
+
+	go h.writer(pingTicker, un, wsConn, subs)
+	h.reader(r.Context(), un, wsConn)
 }
 
-func reader(conn *websocket.Conn) {
+func (h *SockHub) reader(ctx context.Context, username string, conn *websocket.Conn) {
+	conn.SetReadLimit(h.Config.ReadLimit)
+
+	if err := conn.SetReadDeadline(time.Now().Add(h.Config.PongWait)); err != nil {
+		logrus.WithField("error", err.Error()).Error("error while setting read deadline")
+		return
+	}
+
+	conn.SetPongHandler(func(string) error {
+		if err := conn.SetReadDeadline(time.Now().Add(h.Config.PongWait)); err != nil {
+			return fmt.Errorf("error while setting read deadline, error: %s", err.Error())
+		}
+		return nil
+	})
+
 	// read user sent messages
 	for {
 		mt, message, err := conn.ReadMessage()
 		if err != nil {
-			logrus.Println("read:", err)
 			break
 		}
-
+		cm := &ClientMessage{}
+		if err = json.Unmarshal(message, cm); err != nil {
+			logrus.
+				WithField("username", username).
+				WithField("type", mt).
+				WithField("payload", cm).
+				Info("invalid error from usre")
+			continue
+		}
 		logrus.
-			WithField("message_type", mt).
-			WithField("received_message", string(message)).
+			WithField("username", username).
+			WithField("type", mt).
+			WithField("payload", cm).
 			Info("message received from user")
+		h.Hub.Publish(ctx, cm.Topic, cm.Body)
 	}
 }
 
-func writer(un string, conn *websocket.Conn, subs []*hub.Subscription) {
+func (h *SockHub) writer(pingTicker *time.Ticker, un string, conn *websocket.Conn, subs []*hub.Subscription) {
+	go func() {
+		defer func() {
+			pingTicker.Stop()
+		}()
+
+		for {
+			<-pingTicker.C
+			logrus.WithField("username", un).Debug("writing ping message")
+			if err := conn.SetWriteDeadline(time.Now().Add(h.Config.WriteWait)); err != nil {
+				logrus.WithField("error", err.Error()).Error("error while setting write deadline")
+				return
+			}
+
+			if err := conn.WriteMessage(websocket.PingMessage, []byte{}); err != nil {
+				logrus.WithField("error", err.Error()).Error("error while sending ping message")
+				return
+			}
+			logrus.WithField("username", un).Debug("ping sent")
+		}
+	}()
+
 	for _, s := range subs {
 		// pass redis messages to user
 		go func(s *hub.Subscription) {
+			logrus.WithField("topic", s.Topic).Debug("listening to message channel")
 			for msg := range s.MessageChannel {
 				logrus.
 					WithField("channel", msg.Channel).
@@ -104,6 +184,7 @@ func writer(un string, conn *websocket.Conn, subs []*hub.Subscription) {
 					break
 				}
 			}
+			logrus.WithField("topic", s.Topic).Debug("message channel closed")
 		}(s)
 		logrus.
 			WithField("username", un).
