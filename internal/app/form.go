@@ -9,7 +9,9 @@ import (
 
 func (a *App) Home(ctx *gin.Context) {
 	username := ctx.Request.URL.Query().Get("username")
-	socketUrl := fmt.Sprintf("ws://%s:%d/v1/socket/connect?username=%s", a.Config.Addr, a.Config.Port, username)
+	topics := ctx.Request.URL.Query().Get("topics")
+	urlFormat := "ws://%s:%d/v1/socket/connect?username=%s&topics=%s"
+	socketUrl := fmt.Sprintf(urlFormat, a.Config.Addr, a.Config.Port, username, topics)
 	if err := homeTemplate.Execute(ctx.Writer, socketUrl); err != nil {
 		ctx.Writer.WriteHeader(http.StatusInternalServerError)
 		return

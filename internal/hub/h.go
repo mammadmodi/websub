@@ -1,9 +1,6 @@
 package hub
 
-import (
-	"context"
-	"github.com/go-redis/redis"
-)
+import "github.com/go-redis/redis"
 
 type RedisHub struct {
 	Client redis.UniversalClient
@@ -19,13 +16,4 @@ func NewRedisHub(client redis.UniversalClient, config RedisHubConfig) *RedisHub 
 	}
 
 	return rh
-}
-
-func (r RedisHub) Subscribe(ctx context.Context, topic string) (<-chan *redis.Message, func(), error) {
-	ps := r.Client.Subscribe(topic)
-
-	ch := ps.Channel()
-	closer := func() { _ = ps.Close() }
-
-	return ch, closer, nil
 }
