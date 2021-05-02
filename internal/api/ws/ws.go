@@ -26,7 +26,7 @@ func NewSocketManager(redisSource *source.RedisSource) *SocketManager {
 func (m *SocketManager) Socket(ctx *gin.Context) {
 	r := ctx.Request
 	w := ctx.Writer
-	username := r.URL.Query().Get("name")
+	username := r.URL.Query().Get("username")
 	if username == "" {
 		w.WriteHeader(http.StatusBadRequest)
 		return

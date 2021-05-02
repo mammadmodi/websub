@@ -8,8 +8,8 @@ import (
 )
 
 func (a *App) Home(ctx *gin.Context) {
-	name := ctx.Request.URL.Query().Get("name")
-	socketUrl := fmt.Sprintf("ws://%s:%d/v1/socket/connect?name=%s", a.Config.Addr, a.Config.Port, name)
+	username := ctx.Request.URL.Query().Get("username")
+	socketUrl := fmt.Sprintf("ws://%s:%d/v1/socket/connect?username=%s", a.Config.Addr, a.Config.Port, username)
 	if err := homeTemplate.Execute(ctx.Writer, socketUrl); err != nil {
 		ctx.Writer.WriteHeader(http.StatusInternalServerError)
 		return
