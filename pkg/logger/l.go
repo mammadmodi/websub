@@ -9,6 +9,7 @@ import (
 // Configuration is generic struct for logging configs
 type Configuration struct {
 	Enabled             bool   `default:"true" split_words:"true"`
+	Debug               bool   `default:"true" split_words:"true"`
 	Level               string `default:"info" split_words:"true"`
 	Pretty              bool   `default:"false" split_words:"true"`
 	FileRedirectEnabled bool   `default:"false" split_words:"true"`

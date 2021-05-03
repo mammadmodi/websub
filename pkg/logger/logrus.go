@@ -17,15 +17,28 @@ func NewLogrusLogger(config Configuration) (*logrus.Logger, error) {
 		return l, nil
 	}
 
-	formatter := &logrus.JSONFormatter{
-		FieldMap: logrus.FieldMap{
-			logrus.FieldKeyTime:  "time",
-			logrus.FieldKeyLevel: "level",
-			logrus.FieldKeyMsg:   "msg",
-			logrus.FieldKeyFunc:  "caller",
-			logrus.FieldKeyFile:  "go_file",
-		},
-		PrettyPrint: config.Pretty,
+	var formatter logrus.Formatter
+	if config.Debug {
+		formatter = &logrus.TextFormatter{
+			FieldMap: logrus.FieldMap{
+				logrus.FieldKeyTime:  "time",
+				logrus.FieldKeyLevel: "level",
+				logrus.FieldKeyMsg:   "message",
+				logrus.FieldKeyFunc:  "caller",
+				logrus.FieldKeyFile:  "go_file",
+			},
+		}
+	} else {
+		formatter = &logrus.JSONFormatter{
+			FieldMap: logrus.FieldMap{
+				logrus.FieldKeyTime:  "time",
+				logrus.FieldKeyLevel: "level",
+				logrus.FieldKeyMsg:   "msg",
+				logrus.FieldKeyFunc:  "caller",
+				logrus.FieldKeyFile:  "go_file",
+			},
+			PrettyPrint: config.Pretty,
+		}
 	}
 	l.SetFormatter(formatter)
 	l.SetReportCaller(true)
@@ -36,7 +49,6 @@ func NewLogrusLogger(config Configuration) (*logrus.Logger, error) {
 		return nil, fmt.Errorf("error while parsing log level `%v`, err: %v", config.Level, err)
 	}
 	l.SetLevel(level)
-
 	if config.CoreFields != nil {
 		l.AddHook(&defaultFieldHook{
 			defaultFields: config.CoreFields,

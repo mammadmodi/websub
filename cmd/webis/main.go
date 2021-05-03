@@ -55,7 +55,7 @@ func init() {
 	}
 
 	rh := hub.NewRedisHub(rc, hub.RedisHubConfig{})
-	sh := ws.NewSockHub(c.SockHubConfig, rh)
+	sh := ws.NewSockHub(c.SockHubConfig, rh, l)
 
 	// initializing application instance
 	a = &app.App{
