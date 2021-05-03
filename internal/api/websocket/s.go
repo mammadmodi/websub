@@ -6,6 +6,7 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/mammadmodi/webis/internal/hub"
 	"github.com/sirupsen/logrus"
+	"net/http"
 	"time"
 )
 
@@ -34,10 +35,13 @@ type SockHub struct {
 // NewSockHub creates a SockHub object.
 func NewSockHub(config Configuration, redisHub *hub.RedisHub, logger *logrus.Logger) *SockHub {
 	m := &SockHub{
-		Hub:      redisHub,
-		Config:   config,
-		logger:   logger,
-		upgrader: &websocket.Upgrader{},
+		Hub:    redisHub,
+		Config: config,
+		logger: logger,
+		upgrader: &websocket.Upgrader{
+			// TODO you should not ignore origin check in production.
+			CheckOrigin: func(r *http.Request) bool { return true },
+		},
 	}
 	return m
 }
