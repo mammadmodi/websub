@@ -2,7 +2,7 @@ version: '3.7'
 services:
   webis:
     container_name: webis
-    image: mammadmodi/webis:latest
+    image: mammadmodi/webis:master
     ports:
       - 8379:8379
     depends_on:
