@@ -6,7 +6,7 @@ Easily make a communication between your users and your microservices through we
 
 ## Quick Setup
 
-Simply run ```docker-compose up```.
+Simply run ```docker-compose -f ./test/docker-compose.yaml up```.
 It will set up a redis instance and a webis instance that listens to port 8379.
 
 ### Connect to Webis
@@ -16,4 +16,4 @@ start a websocket connection by clicking on "open" button.
 ### Send Messages to User
 Now you can send messages to your client through redis:
 
-```docker-compose exec redis /bin/sh -c "redis-cli publish testtopic hello-john"```
+```docker-compose exec -f ./test/docker-compose.yaml redis /bin/sh -c "redis-cli publish testtopic hello-john"```
