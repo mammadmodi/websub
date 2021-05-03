@@ -60,8 +60,8 @@ func (h *SockHub) Connect(w http.ResponseWriter, r *http.Request) {
 		h.logger.WithField("username", un).Info("socket connection closed")
 	}()
 
-	// Create hub subscriptions for user topics.
-	subs, err := h.Hub.BatchSubscribe(r.Context(), topics)
+	// Create hub subscription for user topics.
+	sub, err := h.Hub.Subscribe(topics)
 	if err != nil {
 		h.logger.WithField("username", un).Info("subscriptions failed for user")
 		w.WriteHeader(http.StatusInternalServerError)
@@ -71,10 +71,8 @@ func (h *SockHub) Connect(w http.ResponseWriter, r *http.Request) {
 
 	// Schedule hub unsubscribe at the end.
 	defer func() {
-		for _, s := range subs {
-			s.Closer()
-		}
-		h.logger.WithField("username", un).Info("hub subscriptions closed successfully")
+		sub.Closer()
+		h.logger.WithField("username", un).Info("hub subscription closed successfully")
 	}()
 
 	// Launch a ws pinger in background.
@@ -82,7 +80,7 @@ func (h *SockHub) Connect(w http.ResponseWriter, r *http.Request) {
 	defer pingTicker.Stop()
 	go h.pingOnTick(un, pingTicker, wsConn)
 
-	h.writer(un, wsConn, subs)
+	h.writer(un, wsConn, sub)
 	h.reader(r.Context(), un, wsConn)
 }
 
@@ -119,30 +117,28 @@ func (h *SockHub) pingOnTick(un string, pingTicker *time.Ticker, conn *websocket
 }
 
 // writer launches channel listeners in background which will receive messages from topics user is subscribed to.
-func (h *SockHub) writer(un string, conn *websocket.Conn, subs []*hub.Subscription) {
-	for _, s := range subs {
-		// pass redis messages to user
-		go func(s *hub.Subscription) {
-			h.logger.WithField("topic", s.Topic).Debug("listening to message channel")
-			for msg := range s.MessageChannel {
-				h.logger.
-					WithField("channel", msg.Channel).
-					WithField("payload", msg.Payload).
-					Info("message received from redis")
+func (h *SockHub) writer(un string, conn *websocket.Conn, sub *hub.Subscription) {
+	// pass redis messages to user
+	go func(s *hub.Subscription) {
+		h.logger.WithField("topics", s.Topics).Debug("listening to message channel")
+		for msg := range s.MessageChannel {
+			h.logger.
+				WithField("channel", msg.Channel).
+				WithField("payload", msg.Payload).
+				Info("message received from redis")
 
-				err := conn.WriteMessage(1, []byte(msg.Payload))
-				if err != nil {
-					h.logger.WithField("error", err).Error("error while sending message to user")
-					break
-				}
+			err := conn.WriteMessage(1, []byte(msg.Payload))
+			if err != nil {
+				h.logger.WithField("error", err).Error("error while sending message to user")
+				break
 			}
-			h.logger.WithField("topic", s.Topic).Debug("message channel closed")
-		}(s)
-		h.logger.
-			WithField("username", un).
-			WithField("topics", s.Topic).
-			Info("message channel listeners created")
-	}
+		}
+		h.logger.WithField("topics", s.Topics).Debug("message channel closed")
+	}(sub)
+	h.logger.
+		WithField("username", un).
+		WithField("topics", sub.Topics).
+		Info("message channel listeners created")
 }
 
 // reader reads user messages and then publishes them to specified topic.
