@@ -3,7 +3,6 @@ package app
 import (
 	"context"
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"github.com/mammadmodi/webis/internal/api/ws"
 	//"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
@@ -32,10 +31,10 @@ type App struct {
 // Start runs api server in background
 func (a *App) Start(ctx context.Context) error {
 	// running http server
-	r := a.initRouter()
+	mux := a.initMux()
 	a.server = &http.Server{
 		Addr:    fmt.Sprintf("%s:%v", a.Config.Addr, a.Config.Port),
-		Handler: r,
+		Handler: mux,
 	}
 	go func() {
 		if err := a.server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
@@ -59,21 +58,10 @@ func (a *App) Stop(ctx context.Context) {
 	return
 }
 
-// initRouter initializes a router for ack endpoints by application's config
-func (a *App) initRouter() *gin.Engine {
-	gin.SetMode(a.Config.Mode)
+func (a *App) initMux() *http.ServeMux {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/socket/form", a.Home)
+	mux.HandleFunc("/socket/connect", a.SockHub.Connect)
 
-	// init gin router
-	r := gin.New()
-	if a.Config.Mode == gin.DebugMode {
-		r.Use(gin.Logger())
-	}
-	//r.GET("/healthz", a.Handler.Health)
-	//r.GET("/metrics", a.Handler.MetricsMiddleware, gin.WrapH(promhttp.Handler()))
-	//r.GET("/v1/socket", a.Handler.ResolveAckMiddleware, a.Handler.Ack)
-
-	r.GET("/v1/socket/form", a.Home)
-	r.GET("/v1/socket/connect", a.SockHub.Socket)
-
-	return r
+	return mux
 }

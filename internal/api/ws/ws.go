@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/mammadmodi/webis/internal/hub"
@@ -56,10 +55,7 @@ func NewSockHub(config Configuration, redisHub *hub.RedisHub, logger *logrus.Log
 	return m
 }
 
-func (h *SockHub) Socket(ctx *gin.Context) {
-	r := ctx.Request
-	w := ctx.Writer
-
+func (h *SockHub) Connect(w http.ResponseWriter, r *http.Request) {
 	// Validate request and resolve parameters
 	if err := validateRequest(r); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -113,7 +109,7 @@ func (h *SockHub) Socket(ctx *gin.Context) {
 		for _, s := range subs {
 			s.Closer()
 		}
-		h.logger.WithField("username", un).Info("redis subscriptions closed successfully")
+		h.logger.WithField("username", un).Info("hub subscriptions closed successfully")
 	}()
 
 	// Launch a ws pinger in background

@@ -2,21 +2,20 @@ package app
 
 import (
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"html/template"
 	"net/http"
 )
 
-func (a *App) Home(ctx *gin.Context) {
-	username := ctx.Request.URL.Query().Get("username")
-	topics := ctx.Request.URL.Query().Get("topics")
-	urlFormat := "ws://%s:%d/v1/socket/connect?username=%s&topics=%s"
+func (a *App) Home(w http.ResponseWriter, r *http.Request) {
+	username := r.URL.Query().Get("username")
+	topics := r.URL.Query().Get("topics")
+	urlFormat := "ws://%s:%d/socket/connect?username=%s&topics=%s"
 	socketUrl := fmt.Sprintf(urlFormat, a.Config.Addr, a.Config.Port, username, topics)
-	if err := homeTemplate.Execute(ctx.Writer, socketUrl); err != nil {
-		ctx.Writer.WriteHeader(http.StatusInternalServerError)
+	if err := homeTemplate.Execute(w, socketUrl); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	ctx.Writer.WriteHeader(http.StatusOK)
+	w.WriteHeader(http.StatusOK)
 }
 
 var homeTemplate = template.Must(template.New("").Parse(`
