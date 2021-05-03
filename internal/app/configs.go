@@ -43,7 +43,7 @@ func NewConfiguration() (*Configs, error) {
 
 	// loading logging configs
 	loggingConfig := logger.Configuration{}
-	err = envconfig.Process("webis_logging", &sockHubConfig)
+	err = envconfig.Process("webis_logging", &loggingConfig)
 	if err != nil {
 		return nil, fmt.Errorf("error while processing logging configs from env variables, error: %v", err)
 	}
