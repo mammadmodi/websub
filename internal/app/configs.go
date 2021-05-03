@@ -3,7 +3,7 @@ package app
 import (
 	"fmt"
 	"github.com/kelseyhightower/envconfig"
-	"github.com/mammadmodi/webis/internal/api/ws"
+	"github.com/mammadmodi/webis/internal/api/websocket"
 	"github.com/mammadmodi/webis/pkg/logger"
 	"github.com/mammadmodi/webis/pkg/redis"
 	"io/ioutil"
@@ -12,7 +12,7 @@ import (
 
 // Configs is struct that contains all configuration of all parts of application
 type Configs struct {
-	SockHubConfig       ws.Configuration
+	SockHubConfig       websocket.Configuration
 	RedisConfigs        redis.Configs
 	LoggingConfigs      logger.Configuration
 	AuthMethod          string        `default:"jwt" split_words:"true"`
@@ -34,14 +34,16 @@ func NewConfiguration() (*Configs, error) {
 	}
 
 	// loading SockHub configs
-	sockHubConfig, err := ws.GetConfigFromEnv("webis_sock")
+	sockHubConfig := websocket.Configuration{}
+	err = envconfig.Process("webis_sock", &sockHubConfig)
 	if err != nil {
-		return nil, fmt.Errorf("error while processing logging configs from env variables, error: %v", err)
+		return nil, fmt.Errorf("error while processing sockhub configs from env variables, error: %v", err)
 	}
 	config.SockHubConfig = sockHubConfig
 
 	// loading logging configs
-	loggingConfig, err := logger.GetConfigFromEnv("webis_logging")
+	loggingConfig := logger.Configuration{}
+	err = envconfig.Process("webis_logging", &sockHubConfig)
 	if err != nil {
 		return nil, fmt.Errorf("error while processing logging configs from env variables, error: %v", err)
 	}

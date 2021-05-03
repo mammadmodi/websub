@@ -6,7 +6,7 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/mammadmodi/webis/internal/api/ws"
+	"github.com/mammadmodi/webis/internal/api/websocket"
 	"github.com/mammadmodi/webis/internal/app"
 	"github.com/mammadmodi/webis/internal/hub"
 	"github.com/mammadmodi/webis/pkg/logger"
@@ -55,7 +55,7 @@ func init() {
 	}
 
 	rh := hub.NewRedisHub(rc, hub.RedisHubConfig{})
-	sh := ws.NewSockHub(c.SockHubConfig, rh, l)
+	sh := websocket.NewSockHub(c.SockHubConfig, rh, l)
 
 	// initializing application instance
 	a = &app.App{

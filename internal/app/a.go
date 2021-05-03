@@ -3,7 +3,7 @@ package app
 import (
 	"context"
 	"fmt"
-	"github.com/mammadmodi/webis/internal/api/ws"
+	"github.com/mammadmodi/webis/internal/api/websocket"
 	//"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
 	"net/http"
@@ -23,7 +23,7 @@ Build Date: __build_date__
 type App struct {
 	Config  *Configs
 	Logger  *logrus.Logger
-	SockHub *ws.SockHub
+	SockHub *websocket.SockHub
 
 	server *http.Server
 }
@@ -44,7 +44,7 @@ func (a *App) Start(ctx context.Context) error {
 	return nil
 }
 
-// Stop stops handler's worker pool and gin http server
+// Stop stops the application and http server.
 func (a *App) Stop(ctx context.Context) {
 	ctxWithTimeout, cancel := context.WithTimeout(context.Background(), a.Config.GracefulTimeout)
 	defer cancel()
@@ -58,6 +58,7 @@ func (a *App) Stop(ctx context.Context) {
 	return
 }
 
+// initMux returns a ServeMux that routes requests to available apis.
 func (a *App) initMux() *http.ServeMux {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/socket/form", a.Home)

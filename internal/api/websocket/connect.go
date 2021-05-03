@@ -1,4 +1,4 @@
-package ws
+package websocket
 
 import (
 	"context"
@@ -6,55 +6,20 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gorilla/websocket"
-	"github.com/kelseyhightower/envconfig"
 	"github.com/mammadmodi/webis/internal/hub"
-	"github.com/sirupsen/logrus"
 	"net/http"
 	"strings"
 	"time"
 )
 
-type Configuration struct {
-	PingInterval time.Duration `default:"25s" split_words:"true"`
-	PongWait     time.Duration `default:"30s" split_words:"true"`
-	WriteWait    time.Duration `default:"20s" split_words:"true"`
-	ReadLimit    int64         `default:"4096" split_words:"true"`
-}
-
-// GetConfigFromEnv tries to generate configuration from related
-// environment variables with power of "kelseyhightower" library.
-func GetConfigFromEnv(prefix string) (Configuration, error) {
-	config := Configuration{}
-	if err := envconfig.Process(prefix, &config); err != nil {
-		return config, fmt.Errorf("error while loading configs from env variables, error: %v", err)
-	}
-
-	return config, nil
-}
-
-type SockHub struct {
-	Hub    *hub.RedisHub
-	Config Configuration
-
-	logger   *logrus.Logger
-	upgrader *websocket.Upgrader
-}
-
+// ClientMessage is structure of messages that will be received from user.
 type ClientMessage struct {
 	Body  string `json:"body"`
 	Topic string `json:"topic"`
 }
 
-func NewSockHub(config Configuration, redisHub *hub.RedisHub, logger *logrus.Logger) *SockHub {
-	m := &SockHub{
-		Hub:      redisHub,
-		Config:   config,
-		logger:   logger,
-		upgrader: &websocket.Upgrader{},
-	}
-	return m
-}
-
+// Connect is a http handler that in first upgrades protocol to Websocket Protocol and
+// then creates subscriptions to topics which user is requested.
 func (h *SockHub) Connect(w http.ResponseWriter, r *http.Request) {
 	// Validate request and resolve parameters
 	if err := validateRequest(r); err != nil {
@@ -62,11 +27,11 @@ func (h *SockHub) Connect(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte(err.Error()))
 		return
 	}
-	// TODO Authenticate and Authorize topics for user
+	// TODO Authenticate and Authorize topic accesses for user.
 	un := r.URL.Query().Get("username")
 	topics := strings.Split(r.URL.Query().Get("topics"), ",")
 
-	// Upgrade http connection to websocket.
+	// Upgrade http connection to websocket and configure connection.
 	wsConn, err := h.upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		h.logger.WithField("error", err).WithField("username", un).Error("upgrade error")
@@ -86,7 +51,7 @@ func (h *SockHub) Connect(w http.ResponseWriter, r *http.Request) {
 	})
 	h.logger.WithField("username", un).WithField("topics", topics).Info("connection created for user")
 
-	// Close ws connection at the end.
+	// Schedule ws connection close at the end.
 	defer func() {
 		err := wsConn.Close()
 		if err != nil {
@@ -104,7 +69,7 @@ func (h *SockHub) Connect(w http.ResponseWriter, r *http.Request) {
 	}
 	h.logger.WithField("username", un).Info("hub subscriptions created for user")
 
-	// Close hub subscriptions at the end.
+	// Schedule hub unsubscribe at the end.
 	defer func() {
 		for _, s := range subs {
 			s.Closer()
@@ -112,7 +77,7 @@ func (h *SockHub) Connect(w http.ResponseWriter, r *http.Request) {
 		h.logger.WithField("username", un).Info("hub subscriptions closed successfully")
 	}()
 
-	// Launch a ws pinger in background
+	// Launch a ws pinger in background.
 	pingTicker := time.NewTicker(h.Config.PingInterval)
 	defer pingTicker.Stop()
 	go h.pingOnTick(un, pingTicker, wsConn)
@@ -135,6 +100,7 @@ func validateRequest(req *http.Request) error {
 	return nil
 }
 
+// pingOnTick sends a ping message to user when receives a signal from ping ticker.
 func (h *SockHub) pingOnTick(un string, pingTicker *time.Ticker, conn *websocket.Conn) {
 	for {
 		<-pingTicker.C
@@ -152,6 +118,7 @@ func (h *SockHub) pingOnTick(un string, pingTicker *time.Ticker, conn *websocket
 	}
 }
 
+// writer launches channel listeners in background which will receive messages from topics user is subscribed to.
 func (h *SockHub) writer(un string, conn *websocket.Conn, subs []*hub.Subscription) {
 	for _, s := range subs {
 		// pass redis messages to user
@@ -178,6 +145,7 @@ func (h *SockHub) writer(un string, conn *websocket.Conn, subs []*hub.Subscripti
 	}
 }
 
+// reader reads user messages and then publishes them to specified topic.
 func (h *SockHub) reader(ctx context.Context, username string, conn *websocket.Conn) {
 	// read user sent messages
 	for {
@@ -199,6 +167,7 @@ func (h *SockHub) reader(ctx context.Context, username string, conn *websocket.C
 			WithField("type", mt).
 			WithField("payload", cm).
 			Info("message received from user")
+		// TODO authorize user access to the topic.
 		h.Hub.Publish(ctx, cm.Topic, cm.Body)
 	}
 }

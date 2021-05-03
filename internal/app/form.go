@@ -6,6 +6,8 @@ import (
 	"net/http"
 )
 
+// Home is a http handler that renders a html form that can be create web socket
+// connection with the websocket server.
 func (a *App) Home(w http.ResponseWriter, r *http.Request) {
 	username := r.URL.Query().Get("username")
 	topics := r.URL.Query().Get("topics")
