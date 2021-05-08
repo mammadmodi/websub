@@ -20,8 +20,8 @@ Now you can send messages to your client through redis:
 
 #### Publish to the topic "jonhtopic1"
 
-```docker-compose exec -f ./test/docker-compose.yaml redis /bin/sh -c "redis-cli publish johntopic1 hello-john"```
+```docker-compose -f ./test/docker-compose.yaml exec redis /bin/sh -c "redis-cli publish johntopic1 hello-john"```
 
-#### Publish to the topic "jonhtopic1"
+#### Publish to the topic "jonhtopic2"
 
-```docker-compose exec -f ./test/docker-compose.yaml redis /bin/sh -c "redis-cli publish johntopic2 hello-john"```
+```docker-compose -f ./test/docker-compose.yaml exec redis /bin/sh -c "redis-cli publish johntopic2 hello-john"```
