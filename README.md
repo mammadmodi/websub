@@ -10,10 +10,18 @@ Simply run ```docker-compose -f ./test/docker-compose.yaml up```.
 It will set up a redis instance and a webis instance that listens to port 8379.
 
 ### Connect to Webis
-In browser go to the [webis form](http://127.0.0.1:8379/socket/form?username=john&topics=testtopic) and
+In browser go to the [webis form](http://127.0.0.1:8379/socket/form?username=john&topics=jonhtopic1,johntopic2) and
 start a websocket connection by clicking on "open" button.
+It will create a websocket connection to webis and webis will create redis subscriptions to topics "jonhtopic1" and "jonhtopic2"
+for the user.
 
 ### Send Messages to User
 Now you can send messages to your client through redis:
 
-```docker-compose exec -f ./test/docker-compose.yaml redis /bin/sh -c "redis-cli publish testtopic hello-john"```
+#### Publish to the topic "jonhtopic1"
+
+```docker-compose exec -f ./test/docker-compose.yaml redis /bin/sh -c "redis-cli publish jonhtopic1 hello-john"```
+
+#### Publish to the topic "jonhtopic1"
+
+```docker-compose exec -f ./test/docker-compose.yaml redis /bin/sh -c "redis-cli publish jonhtopic2 hello-john"```
