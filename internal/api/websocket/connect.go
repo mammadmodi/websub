@@ -169,15 +169,14 @@ func (h *SockHub) reader(ctx context.Context, username string, conn *websocket.C
 			Data:  cm.Body,
 			Topic: cm.Topic,
 		}
-		dc, err := h.Hub.Publish(ctx, msg)
-		if err != nil || dc == 0 {
+		err = h.Hub.Publish(ctx, msg)
+		if err != nil {
 			h.logger.WithField("username", username).
 				WithField("type", mt).
 				WithField("payload", cm).
 				WithField("topic", cm.Topic).
-				WithField("delivery_count", dc).
-				WithField("err", err).
-				Error("could not deliver message to any subscribers")
+				WithError(err).
+				Error("could not publish message to hub")
 		}
 	}
 }

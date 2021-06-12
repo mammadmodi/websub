@@ -36,10 +36,10 @@ func NewRedisHub(client redis.UniversalClient, logger *logrus.Logger, config Red
 }
 
 // Publish publishes a message to a topic.
-func (r *RedisHub) Publish(ctx context.Context, message *Message) (deliveryCount uint64, err error) {
+func (r *RedisHub) Publish(ctx context.Context, message *Message) error {
 	cmd := r.Client.Publish(message.Topic, message.Data)
-	dc, err := cmd.Result()
-	return uint64(dc), err
+	_, err := cmd.Result()
+	return err
 }
 
 // Subscribe creates a subscription to topic(or topics) and returns it.
