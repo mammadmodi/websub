@@ -25,7 +25,7 @@ type Configuration struct {
 // SockHub tunnels websocket messages(in and out) to a pubsub hub.
 type SockHub struct {
 	// Hub is a core pubsub driver(e.g. RedisHub) that is used to tunneling messages.
-	Hub    *hub.RedisHub
+	Hub    hub.Hub
 	Config Configuration
 
 	logger   *logrus.Logger
@@ -33,9 +33,9 @@ type SockHub struct {
 }
 
 // NewSockHub creates a SockHub object.
-func NewSockHub(config Configuration, redisHub *hub.RedisHub, logger *logrus.Logger) *SockHub {
+func NewSockHub(config Configuration, hub hub.Hub, logger *logrus.Logger) *SockHub {
 	m := &SockHub{
-		Hub:    redisHub,
+		Hub:    hub,
 		Config: config,
 		logger: logger,
 		upgrader: &websocket.Upgrader{

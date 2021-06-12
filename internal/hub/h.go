@@ -1,22 +1,23 @@
 package hub
 
-import "github.com/go-redis/redis"
+import "context"
 
-// RedisHub is a redis client wrapper that contains redis pub sub commands.
-type RedisHub struct {
-	Client redis.UniversalClient
-	Config RedisHubConfig
+// Message is the data type that's been exchanged between hub implementations and .
+type Message struct {
+	Data  interface{} `json:"data"`
+	Topic string      `json:"topic"`
 }
 
-// RedisHubConfig is config for RedisHub.
-type RedisHubConfig struct{}
+// Subscription is a struct that holds state of a subscription.
+type Subscription struct {
+	// Topics is topics string which separated with "," delimiter.
+	Topics string
+	// MessageChannel is a go channel that you can receive your messages with that.
+	MessageChannel chan *Message
+}
 
-// NewRedisHub assigns params to a redis hub object and returns it.
-func NewRedisHub(client redis.UniversalClient, config RedisHubConfig) *RedisHub {
-	rh := &RedisHub{
-		Client: client,
-		Config: config,
-	}
-
-	return rh
+// Hub is a messaging channel that implements pub sub exchange pattern.
+type Hub interface {
+	Publish(ctx context.Context, message *Message) (deliveryCount uint64, err error)
+	Subscribe(ctx context.Context, topics ...string) (*Subscription, error)
 }

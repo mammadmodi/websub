@@ -61,7 +61,8 @@ func (h *SockHub) Connect(w http.ResponseWriter, r *http.Request) {
 	}()
 
 	// Create hub subscription for user topics.
-	sub, err := h.Hub.Subscribe(topics)
+	ctxWithCancel, cancel := context.WithCancel(r.Context())
+	sub, err := h.Hub.Subscribe(ctxWithCancel, topics...)
 	if err != nil {
 		h.logger.WithField("username", un).Info("subscriptions failed for user")
 		w.WriteHeader(http.StatusInternalServerError)
@@ -71,7 +72,7 @@ func (h *SockHub) Connect(w http.ResponseWriter, r *http.Request) {
 
 	// Schedule hub unsubscribe at the end.
 	defer func() {
-		sub.Closer()
+		cancel()
 		h.logger.WithField("username", un).Info("hub subscription closed successfully")
 	}()
 
@@ -81,7 +82,7 @@ func (h *SockHub) Connect(w http.ResponseWriter, r *http.Request) {
 	go h.pingOnTick(un, pingTicker, wsConn)
 
 	h.writer(un, wsConn, sub)
-	h.reader(r.Context(), un, wsConn)
+	h.reader(ctxWithCancel, un, wsConn)
 }
 
 func validateRequest(req *http.Request) error {
@@ -118,16 +119,16 @@ func (h *SockHub) pingOnTick(un string, pingTicker *time.Ticker, conn *websocket
 
 // writer launches channel listeners in background which will receive messages from topics user is subscribed to.
 func (h *SockHub) writer(un string, conn *websocket.Conn, sub *hub.Subscription) {
-	// pass redis messages to user
+	// pass hub messages to user
 	go func(s *hub.Subscription) {
 		h.logger.WithField("topics", s.Topics).Debug("listening to message channel")
 		for msg := range s.MessageChannel {
 			h.logger.
-				WithField("channel", msg.Channel).
-				WithField("payload", msg.Payload).
-				Info("message received from redis")
+				WithField("channel", msg.Topic).
+				WithField("payload", msg.Data).
+				Info("message received from hub")
 
-			err := conn.WriteMessage(1, []byte(msg.Payload))
+			err := conn.WriteMessage(1, []byte(fmt.Sprintf("%v", msg.Data))) // TODO review Stringify
 			if err != nil {
 				h.logger.WithField("error", err).Error("error while sending message to user")
 				break
@@ -164,6 +165,19 @@ func (h *SockHub) reader(ctx context.Context, username string, conn *websocket.C
 			WithField("payload", cm).
 			Info("message received from user")
 		// TODO authorize user access to the topic.
-		h.Hub.Publish(ctx, cm.Topic, cm.Body)
+		msg := &hub.Message{
+			Data:  cm.Body,
+			Topic: cm.Topic,
+		}
+		dc, err := h.Hub.Publish(ctx, msg)
+		if err != nil || dc == 0 {
+			h.logger.WithField("username", username).
+				WithField("type", mt).
+				WithField("payload", cm).
+				WithField("topic", cm.Topic).
+				WithField("delivery_count", dc).
+				WithField("err", err).
+				Error("could not deliver message to any subscribers")
+		}
 	}
 }

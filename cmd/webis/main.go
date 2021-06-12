@@ -54,7 +54,7 @@ func init() {
 		l.Fatalf("cannot get ping response with redis client, error: %v", err)
 	}
 
-	rh := hub.NewRedisHub(rc, hub.RedisHubConfig{})
+	rh := hub.NewRedisHub(rc, l, hub.RedisHubConfig{})
 	sh := websocket.NewSockHub(c.SockHubConfig, rh, l)
 
 	// initializing application instance
