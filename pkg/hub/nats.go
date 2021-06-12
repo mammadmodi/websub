@@ -54,8 +54,10 @@ func (n *NatsHub) Subscribe(ctx context.Context, topics ...string) (*Subscriptio
 		subject := t
 		s, err := n.Client.Subscribe(t, func(msg *nats.Msg) {
 			n.Logger.WithField("subject", subject).Debug("message received by nats")
+			var d interface{}
+			_ = json.Unmarshal(msg.Data, &d)
 			hm := &Message{
-				Data:  string(msg.Data),
+				Data:  d,
 				Topic: subject,
 			}
 			msgChannel <- hm
