@@ -31,8 +31,6 @@ services:
       WEBSUB_NATS_RECONNECT_WAIT: "15s"
       WEBSUB_NATS_PING_INTERVAL: "30s"
       WEBSUB_NATS_MAX_PINGS_OUTSTANDING: "5"
-      WEBSUB_NATS_MAX_CLUSTER_ID: "websub_cluster"
-      WEBSUB_NATS_MAX_CLIENT_ID: "websub_client"
   redis:
     image: redis
     container_name: websub-redis
