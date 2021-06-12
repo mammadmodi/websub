@@ -5,15 +5,23 @@ import (
 	"github.com/kelseyhightower/envconfig"
 	"github.com/mammadmodi/webis/internal/api/websocket"
 	"github.com/mammadmodi/webis/pkg/logger"
+	"github.com/mammadmodi/webis/pkg/nats"
 	"github.com/mammadmodi/webis/pkg/redis"
 	"time"
+)
+
+const (
+	RedisHub = "redis_hub"
+	NatsHub  = "nats_hub"
 )
 
 // Configs is struct that contains all configuration of all parts of application
 type Configs struct {
 	SockHubConfig   websocket.Configuration
 	RedisConfigs    redis.Configs
+	NatsConfigs     nats.Configs
 	LoggingConfigs  logger.Configuration
+	HubDriver       string        `default:"redis_hub" split_words:"true"`
 	Addr            string        `default:"127.0.0.1"`
 	Port            int           `default:"8379"`
 	GracefulTimeout time.Duration `default:"15s" split_words:"true"`
@@ -50,6 +58,14 @@ func NewConfiguration() (*Configs, error) {
 		return nil, fmt.Errorf("error while processing redis client configs from env variables, error: %v", err)
 	}
 	config.RedisConfigs = redisConfigs
+
+	// loading nats configs
+	natsConfigs := nats.Configs{}
+	err = envconfig.Process("nats_redis", &natsConfigs)
+	if err != nil {
+		return nil, fmt.Errorf("error while processing nats client configs from env variables, error: %v", err)
+	}
+	config.NatsConfigs = natsConfigs
 
 	return config, nil
 }
