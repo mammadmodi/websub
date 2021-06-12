@@ -26,8 +26,22 @@ services:
       WEBIS_REDIS_IDLE_CHECK_FREQUENCY: "60s"
       WEBIS_REDIS_READ_ONLY: "true"
       WEBIS_REDIS_ROUTE_RANDOMLY: "false"
+      WEBIS_NATS_ADDRESS: "127.0.0.1:4222"
+      WEBIS_NATS_CONNECT_TIMEOUT: "15s"
+      WEBIS_NATS_RECONNECT_WAIT: "15s"
+      WEBIS_NATS_PING_INTERVAL: "30s"
+      WEBIS_NATS_MAX_PINGS_OUTSTANDING: "5"
+      WEBIS_NATS_MAX_CLUSTER_ID: "websub_cluster"
+      WEBIS_NATS_MAX_CLIENT_ID: "websub_client"
   redis:
     image: redis
     container_name: webis-redis
     ports:
       - 6379:6379
+  nats:
+    image: nats
+    container_name: webis-nats
+    ports:
+      - 4222:4222
+      - 6222:6222
+      - 8222:8222
