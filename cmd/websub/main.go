@@ -65,7 +65,7 @@ func init() {
 		if err != nil {
 			l.Fatalf("error while initializing nats client, error: %v", err)
 		}
-		h = hub.NewNatsHub(nc, l, hub.NatsHubConfig{})
+		h = hub.NewNatsHub(nc, l, &hub.NatsHubConfig{})
 	}
 	sh := websocket.NewSockHub(c.SockHubConfig, h, l)
 

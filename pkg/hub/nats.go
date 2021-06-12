@@ -13,7 +13,7 @@ import (
 // NatsHub is a nats client wrapper that contains nats pub sub commands.
 type NatsHub struct {
 	Client *nats.Conn
-	Config NatsHubConfig
+	Config *NatsHubConfig
 	Logger *logrus.Logger
 }
 
@@ -21,7 +21,7 @@ type NatsHub struct {
 type NatsHubConfig struct{}
 
 // NewNatsHub assigns params to a nats hub object and returns it.
-func NewNatsHub(client *nats.Conn, logger *logrus.Logger, config NatsHubConfig) *NatsHub {
+func NewNatsHub(client *nats.Conn, logger *logrus.Logger, config *NatsHubConfig) *NatsHub {
 	if logger == nil {
 		logger = logrus.New()
 		logger.SetOutput(ioutil.Discard)
