@@ -37,13 +37,13 @@ func NewNatsHub(client *nats.Conn, logger *logrus.Logger, config NatsHubConfig) 
 }
 
 // Publish publishes a message to a topic.
-func (n *NatsHub) Publish(ctx context.Context, message *Message) (err error) {
-	b, err := json.Marshal(message.Data)
+func (n *NatsHub) Publish(_ context.Context, topic string, data interface{}) (err error) {
+	b, err := json.Marshal(data)
 	if err != nil {
 		return fmt.Errorf("error while marshalling message data, error : %s", err.Error())
 	}
-	n.Logger.WithField("subject", message.Topic).Debug("successfully published to nats")
-	return n.Client.Publish(message.Topic, b)
+	n.Logger.WithField("subject", topic).Debug("successfully published to nats")
+	return n.Client.Publish(topic, b)
 }
 
 // Subscribe creates a subscription to topic(or topics) and returns it.

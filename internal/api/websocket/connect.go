@@ -62,6 +62,8 @@ func (h *SockHub) Connect(w http.ResponseWriter, r *http.Request) {
 
 	// Create hub subscription for user topics.
 	ctxWithCancel, cancel := context.WithCancel(r.Context())
+	// Schedule hub unsubscribe at the end.
+	defer cancel()
 	sub, err := h.Hub.Subscribe(ctxWithCancel, topics...)
 	if err != nil {
 		h.logger.WithField("username", un).Info("subscriptions failed for user")
@@ -69,12 +71,6 @@ func (h *SockHub) Connect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	h.logger.WithField("username", un).Info("hub subscriptions created for user")
-
-	// Schedule hub unsubscribe at the end.
-	defer func() {
-		cancel()
-		h.logger.WithField("username", un).Info("hub subscription closed successfully")
-	}()
 
 	// Launch a ws pinger in background.
 	pingTicker := time.NewTicker(h.Config.PingInterval)
@@ -165,11 +161,8 @@ func (h *SockHub) reader(ctx context.Context, username string, conn *websocket.C
 			WithField("payload", cm).
 			Info("message received from user")
 		// TODO authorize user access to the topic.
-		msg := &hub.Message{
-			Data:  cm.Body,
-			Topic: cm.Topic,
-		}
-		err = h.Hub.Publish(ctx, msg)
+
+		err = h.Hub.Publish(ctx, cm.Topic, cm.Topic)
 		if err != nil {
 			h.logger.WithField("username", username).
 				WithField("type", mt).

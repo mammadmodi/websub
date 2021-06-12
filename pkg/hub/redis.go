@@ -12,7 +12,7 @@ import (
 // RedisHub is a redis client wrapper that contains redis pub sub commands.
 type RedisHub struct {
 	Client redis.UniversalClient
-	Config RedisHubConfig
+	Config *RedisHubConfig
 	Logger *logrus.Logger
 }
 
@@ -20,7 +20,7 @@ type RedisHub struct {
 type RedisHubConfig struct{}
 
 // NewRedisHub assigns params to a redis hub object and returns it.
-func NewRedisHub(client redis.UniversalClient, logger *logrus.Logger, config RedisHubConfig) *RedisHub {
+func NewRedisHub(client redis.UniversalClient, logger *logrus.Logger, config *RedisHubConfig) *RedisHub {
 	if logger == nil {
 		logger = logrus.New()
 		logger.SetOutput(ioutil.Discard)
@@ -36,8 +36,8 @@ func NewRedisHub(client redis.UniversalClient, logger *logrus.Logger, config Red
 }
 
 // Publish publishes a message to a topic.
-func (r *RedisHub) Publish(ctx context.Context, message *Message) error {
-	cmd := r.Client.Publish(message.Topic, message.Data)
+func (r *RedisHub) Publish(_ context.Context, topic string, data interface{}) error {
+	cmd := r.Client.Publish(topic, data)
 	_, err := cmd.Result()
 	return err
 }
@@ -52,7 +52,7 @@ func (r *RedisHub) Subscribe(ctx context.Context, topics ...string) (*Subscripti
 			case rm := <-ps.Channel():
 				msg := &Message{
 					Data:  rm.Payload,
-					Topic: rm.Pattern,
+					Topic: rm.Channel,
 				}
 				msgChannel <- msg
 			case <-ctx.Done():

@@ -58,7 +58,7 @@ func init() {
 			l.Fatalf("cannot get ping response with redis client, error: %v", err)
 		}
 
-		h = hub.NewRedisHub(rc, l, hub.RedisHubConfig{})
+		h = hub.NewRedisHub(rc, l, &hub.RedisHubConfig{})
 	case app.NatsHub:
 		// initializing nats client
 		nc, err := nats.NewClient(c.NatsConfigs)

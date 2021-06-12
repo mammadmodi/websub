@@ -18,6 +18,6 @@ type Subscription struct {
 
 // Hub is a messaging channel that implements pub sub exchange pattern.
 type Hub interface {
-	Publish(ctx context.Context, message *Message) (err error)
+	Publish(ctx context.Context, topic string, data interface{}) (err error)
 	Subscribe(ctx context.Context, topics ...string) (*Subscription, error)
 }
