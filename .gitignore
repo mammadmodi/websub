@@ -1,3 +1,5 @@
 configs/*.yaml
 vendor/
 .idea
+*mock.go
+.coverage.*

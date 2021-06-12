@@ -5,6 +5,7 @@ go 1.16
 require (
 	github.com/alicebob/miniredis/v2 v2.14.5
 	github.com/go-redis/redis v6.15.9+incompatible
+	github.com/golang/mock v1.6.0
 	github.com/google/go-cmp v0.5.4 // indirect
 	github.com/gorilla/websocket v1.4.2
 	github.com/kelseyhightower/envconfig v1.4.0
@@ -17,5 +18,4 @@ require (
 	github.com/onsi/gomega v1.11.0 // indirect
 	github.com/sirupsen/logrus v1.8.1
 	github.com/stretchr/testify v1.5.1
-	golang.org/x/sys v0.0.0-20210225134936-a50acf3fe073 // indirect
 )
