@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"github.com/mammadmodi/webis/internal/api/websocket"
 	"github.com/mammadmodi/webis/internal/app"
-	"github.com/mammadmodi/webis/internal/hub"
+	"github.com/mammadmodi/webis/pkg/hub"
 	"github.com/mammadmodi/webis/pkg/logger"
 	"github.com/mammadmodi/webis/pkg/redis"
 	"github.com/sirupsen/logrus"

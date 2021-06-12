@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gorilla/websocket"
-	"github.com/mammadmodi/webis/internal/hub"
+	"github.com/mammadmodi/webis/pkg/hub"
 	"net/http"
 	"strings"
 	"time"
