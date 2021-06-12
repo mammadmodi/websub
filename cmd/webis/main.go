@@ -10,6 +10,7 @@ import (
 	"github.com/mammadmodi/webis/internal/app"
 	"github.com/mammadmodi/webis/pkg/hub"
 	"github.com/mammadmodi/webis/pkg/logger"
+	"github.com/mammadmodi/webis/pkg/nats"
 	"github.com/mammadmodi/webis/pkg/redis"
 	"github.com/sirupsen/logrus"
 	"os"
@@ -44,18 +45,29 @@ func init() {
 		panic(fmt.Errorf("error while initializing logger, error: %v", err))
 	}
 
-	// initializing redis client
-	rc, err := redis.NewClient(c.RedisConfigs)
-	if err != nil {
-		l.Fatalf("error while initializing redis client, error: %v", err)
-	}
-	_, err = rc.Ping().Result()
-	if err != nil {
-		l.Fatalf("cannot get ping response with redis client, error: %v", err)
-	}
+	var h hub.Hub
+	switch c.HubDriver {
+	case app.RedisHub:
+		// initializing redis client
+		rc, err := redis.NewClient(c.RedisConfigs)
+		if err != nil {
+			l.Fatalf("error while initializing redis client, error: %v", err)
+		}
+		_, err = rc.Ping().Result()
+		if err != nil {
+			l.Fatalf("cannot get ping response with redis client, error: %v", err)
+		}
 
-	rh := hub.NewRedisHub(rc, l, hub.RedisHubConfig{})
-	sh := websocket.NewSockHub(c.SockHubConfig, rh, l)
+		h = hub.NewRedisHub(rc, l, hub.RedisHubConfig{})
+	case app.NatsHub:
+		// initializing nats client
+		nc, err := nats.NewClient(c.NatsConfigs)
+		if err != nil {
+			l.Fatalf("error while initializing nats client, error: %v", err)
+		}
+		h = hub.NewNatsHub(nc, l, hub.NatsHubConfig{})
+	}
+	sh := websocket.NewSockHub(c.SockHubConfig, h, l)
 
 	// initializing application instance
 	a = &app.App{
