@@ -1,17 +1,17 @@
 /**
-webis main command is used to run a ws server
+websub main command is used to run a ws server
 */
 package main
 
 import (
 	"context"
 	"fmt"
-	"github.com/mammadmodi/webis/internal/api/websocket"
-	"github.com/mammadmodi/webis/internal/app"
-	"github.com/mammadmodi/webis/pkg/hub"
-	"github.com/mammadmodi/webis/pkg/logger"
-	"github.com/mammadmodi/webis/pkg/nats"
-	"github.com/mammadmodi/webis/pkg/redis"
+	"github.com/mammadmodi/websub/internal/api/websocket"
+	"github.com/mammadmodi/websub/internal/app"
+	"github.com/mammadmodi/websub/pkg/hub"
+	"github.com/mammadmodi/websub/pkg/logger"
+	"github.com/mammadmodi/websub/pkg/nats"
+	"github.com/mammadmodi/websub/pkg/redis"
 	"github.com/sirupsen/logrus"
 	"os"
 	"os/signal"

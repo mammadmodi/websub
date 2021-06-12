@@ -2,7 +2,7 @@ package redis_test
 
 import (
 	"github.com/go-redis/redis"
-	. "github.com/mammadmodi/webis/pkg/redis"
+	. "github.com/mammadmodi/websub/pkg/redis"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"

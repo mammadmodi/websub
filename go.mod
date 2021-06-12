@@ -1,4 +1,4 @@
-module github.com/mammadmodi/webis
+module github.com/mammadmodi/websub
 
 go 1.16
 

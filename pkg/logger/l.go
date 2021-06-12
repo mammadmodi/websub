@@ -9,7 +9,7 @@ type Configuration struct {
 	Pretty              bool   `default:"false" split_words:"true"`
 	FileRedirectEnabled bool   `default:"false" split_words:"true"`
 	FileRedirectPath    string `default:"/var/log" split_words:"true"`
-	FileRedirectPrefix  string `default:"webis" split_words:"true"`
+	FileRedirectPrefix  string `default:"websub" split_words:"true"`
 
 	// CoreFields are constant data that should be passed through all logs
 	CoreFields map[string]interface{}

@@ -3,10 +3,10 @@ package app
 import (
 	"fmt"
 	"github.com/kelseyhightower/envconfig"
-	"github.com/mammadmodi/webis/internal/api/websocket"
-	"github.com/mammadmodi/webis/pkg/logger"
-	"github.com/mammadmodi/webis/pkg/nats"
-	"github.com/mammadmodi/webis/pkg/redis"
+	"github.com/mammadmodi/websub/internal/api/websocket"
+	"github.com/mammadmodi/websub/pkg/logger"
+	"github.com/mammadmodi/websub/pkg/nats"
+	"github.com/mammadmodi/websub/pkg/redis"
 	"time"
 )
 
@@ -30,14 +30,14 @@ type Configs struct {
 // NewConfiguration returns a configuration that is loaded with environment variables
 func NewConfiguration() (*Configs, error) {
 	config := new(Configs)
-	err := envconfig.Process("webis", config)
+	err := envconfig.Process("websub", config)
 	if err != nil {
 		return nil, fmt.Errorf("error while processing global configs from env variables, error: %v", err)
 	}
 
 	// loading SockHub configs
 	sockHubConfig := websocket.Configuration{}
-	err = envconfig.Process("webis_sock", &sockHubConfig)
+	err = envconfig.Process("websub_sock", &sockHubConfig)
 	if err != nil {
 		return nil, fmt.Errorf("error while processing sockhub configs from env variables, error: %v", err)
 	}
@@ -45,7 +45,7 @@ func NewConfiguration() (*Configs, error) {
 
 	// loading logging configs
 	loggingConfig := logger.Configuration{}
-	err = envconfig.Process("webis_logging", &loggingConfig)
+	err = envconfig.Process("websub_logging", &loggingConfig)
 	if err != nil {
 		return nil, fmt.Errorf("error while processing logging configs from env variables, error: %v", err)
 	}
@@ -53,7 +53,7 @@ func NewConfiguration() (*Configs, error) {
 
 	// loading redis configs
 	redisConfigs := redis.Configs{}
-	err = envconfig.Process("webis_redis", &redisConfigs)
+	err = envconfig.Process("websub_redis", &redisConfigs)
 	if err != nil {
 		return nil, fmt.Errorf("error while processing redis client configs from env variables, error: %v", err)
 	}

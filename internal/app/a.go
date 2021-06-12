@@ -3,7 +3,7 @@ package app
 import (
 	"context"
 	"fmt"
-	"github.com/mammadmodi/webis/internal/api/websocket"
+	"github.com/mammadmodi/websub/internal/api/websocket"
 	//"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
 	"net/http"
@@ -19,7 +19,7 @@ Version: __commit_ref_name__ (__commit_sha__)
 Build Date: __build_date__
 `
 
-// App is a type that serves webis functionality
+// App is a type that serves websub functionality
 type App struct {
 	Config  *Configs
 	Logger  *logrus.Logger

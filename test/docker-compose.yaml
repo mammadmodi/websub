@@ -1,46 +1,46 @@
 version: '3.7'
 services:
-  webis:
-    container_name: webis
-    image: mammadmodi/webis:master
+  websub:
+    container_name: websub
+    image: mammadmodi/websub:master
     ports:
       - 8379:8379
     depends_on:
       - redis
     environment:
-      WEBIS_ADDR: "0.0.0.0"
-      WEBIS_PORT: "8379"
-      WEBIS_GRACEFUL_TIMEOUT: "15s"
-      WEBIS_REDIS_MODE: "single_node"
-      WEBIS_REDIS_ADDRESS: "redis:6379"
-      WEBIS_REDIS_DB: "0"
-      WEBIS_REDIS_POOL_SIZE: "10"
-      WEBIS_REDIS_MAX_RETRIES: "1"
-      WEBIS_REDIS_DIAL_TIMEOUT: "5s"
-      WEBIS_REDIS_READ_TIMEOUT: "250ms"
-      WEBIS_REDIS_WRITE_TIMEOUT: "400ms"
-      WEBIS_REDIS_POOL_TIMEOUT: "4s"
-      WEBIS_REDIS_MIN_RETRY_BACKOFF: "20ms"
-      WEBIS_REDIS_MAX_RETRY_BACKOFF: "80ms"
-      WEBIS_REDIS_IDLE_TIMEOUT: "60s"
-      WEBIS_REDIS_IDLE_CHECK_FREQUENCY: "60s"
-      WEBIS_REDIS_READ_ONLY: "true"
-      WEBIS_REDIS_ROUTE_RANDOMLY: "false"
-      WEBIS_NATS_ADDRESS: "127.0.0.1:4222"
-      WEBIS_NATS_CONNECT_TIMEOUT: "15s"
-      WEBIS_NATS_RECONNECT_WAIT: "15s"
-      WEBIS_NATS_PING_INTERVAL: "30s"
-      WEBIS_NATS_MAX_PINGS_OUTSTANDING: "5"
-      WEBIS_NATS_MAX_CLUSTER_ID: "websub_cluster"
-      WEBIS_NATS_MAX_CLIENT_ID: "websub_client"
+      WEBSUB_ADDR: "0.0.0.0"
+      WEBSUB_PORT: "8379"
+      WEBSUB_GRACEFUL_TIMEOUT: "15s"
+      WEBSUB_REDIS_MODE: "single_node"
+      WEBSUB_REDIS_ADDRESS: "redis:6379"
+      WEBSUB_REDIS_DB: "0"
+      WEBSUB_REDIS_POOL_SIZE: "10"
+      WEBSUB_REDIS_MAX_RETRIES: "1"
+      WEBSUB_REDIS_DIAL_TIMEOUT: "5s"
+      WEBSUB_REDIS_READ_TIMEOUT: "250ms"
+      WEBSUB_REDIS_WRITE_TIMEOUT: "400ms"
+      WEBSUB_REDIS_POOL_TIMEOUT: "4s"
+      WEBSUB_REDIS_MIN_RETRY_BACKOFF: "20ms"
+      WEBSUB_REDIS_MAX_RETRY_BACKOFF: "80ms"
+      WEBSUB_REDIS_IDLE_TIMEOUT: "60s"
+      WEBSUB_REDIS_IDLE_CHECK_FREQUENCY: "60s"
+      WEBSUB_REDIS_READ_ONLY: "true"
+      WEBSUB_REDIS_ROUTE_RANDOMLY: "false"
+      WEBSUB_NATS_ADDRESS: "127.0.0.1:4222"
+      WEBSUB_NATS_CONNECT_TIMEOUT: "15s"
+      WEBSUB_NATS_RECONNECT_WAIT: "15s"
+      WEBSUB_NATS_PING_INTERVAL: "30s"
+      WEBSUB_NATS_MAX_PINGS_OUTSTANDING: "5"
+      WEBSUB_NATS_MAX_CLUSTER_ID: "websub_cluster"
+      WEBSUB_NATS_MAX_CLIENT_ID: "websub_client"
   redis:
     image: redis
-    container_name: webis-redis
+    container_name: websub-redis
     ports:
       - 6379:6379
   nats:
     image: nats
-    container_name: webis-nats
+    container_name: websub-nats
     ports:
       - 4222:4222
       - 6222:6222

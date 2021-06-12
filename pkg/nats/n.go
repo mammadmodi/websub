@@ -12,8 +12,8 @@ type Configs struct {
 	ReconnectWait       time.Duration `split_words:"true" default:"5s"`
 	PingInterval        time.Duration `split_words:"true" default:"30s"`
 	MaxPingsOutstanding int           `split_words:"true" default:"5"`
-	ClusterID           string        `split_words:"true" default:"webis_cluster"`
-	ClientID            string        `split_words:"true" default:"webis_client"`
+	ClusterID           string        `split_words:"true" default:"websub_cluster"`
+	ClientID            string        `split_words:"true" default:"websub_client"`
 }
 
 func NewClient(configs Configs) (natsClient *nats.Conn, err error) {

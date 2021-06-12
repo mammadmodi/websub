@@ -4,7 +4,7 @@ package websocket
 
 import (
 	"github.com/gorilla/websocket"
-	"github.com/mammadmodi/webis/pkg/hub"
+	"github.com/mammadmodi/websub/pkg/hub"
 	"github.com/sirupsen/logrus"
 	"net/http"
 	"time"

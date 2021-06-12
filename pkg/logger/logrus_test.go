@@ -57,7 +57,7 @@ func TestNewLogrusLogger(t *testing.T) {
 			Level:               "info",
 			FileRedirectEnabled: true,
 			FileRedirectPath:    ".",
-			FileRedirectPrefix:  "webis_test_log",
+			FileRedirectPrefix:  "websub_test_log",
 			CoreFields:          map[string]interface{}{"key": "default_value"},
 		}
 
