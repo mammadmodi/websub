@@ -7,7 +7,7 @@ Easily make a real time communication core between your users and your microserv
 ## Quick Setup
 
 Simply run ```docker-compose -f ./test/docker-compose.yaml up```.
-It will set up a redis instance and a webis instance that listens to port 8379.
+It will set up a redis instance and a websub instance that listens to port 8379.
 
 ### Connect to Websub
 In browser go to the [websub_sample form](http://127.0.0.1:8379/socket/form?username=john&topics=johntopic1,johntopic2) and
