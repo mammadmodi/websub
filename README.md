@@ -1,5 +1,7 @@
 ## WEBSUB
+[![Test](https://github.com/mammadmodi/websub/actions/workflows/test.yml/badge.svg)](https://github.com/mammadmodi/websub/actions/workflows/test.yml)
 ![GitHub go.mod Go version (branch & subdirectory of monorepo)](https://img.shields.io/github/go-mod/go-version/mammadmodi/websub/master?filename=go.mod)
+[![codecov](https://codecov.io/gh/mammadmodi/websub/branch/master/graph/badge.svg?token=TQZ310PO2H)](https://codecov.io/gh/mammadmodi/websub)
 ~~~
           _______  ______   _______           ______  
 |\     /|(  ____ \(  ___ \ (  ____ \|\     /|(  ___ \ 
