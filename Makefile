@@ -5,7 +5,7 @@ essentials:
 	go install github.com/golang/mock/mockgen
 
 mock: essentials
-	${GOPATH}/bin/mockgen -package=hub -source=pkg/hub/h.go -destination=pkg/hub/mock.go
+	mockgen -package=hub -source=pkg/hub/h.go -destination=pkg/hub/mock.go
 
 unit: mock
 	go test --race -gcflags=-l -v -coverprofile .coverage.out.tmp ./...
