@@ -28,14 +28,11 @@ jobs:
         uses: docker/metadata-action@v3
         with:
           images: mammadmodi/websub
-      - name: Available Platforms
-        run: echo ${{ steps.buildx.outputs.platforms }}
       - name: Build and push
         id: docker_build
         uses: docker/build-push-action@v2
         with:
           push: true
-          platforms: linux/amd64,linux/arm64,darwin/amd64
           tags: mammadmodi/websub:${{ env.BRANCH }}
       - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
