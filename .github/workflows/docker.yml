@@ -12,6 +12,8 @@ jobs:
   docker:
     runs-on: ubuntu-latest
     steps:
+      - name: Resolve Git Ref to Env
+        run: echo "BRANCH=${GITHUB_REF##*/}" >> $GITHUB_ENV
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
       - name: Set up Docker Buildx
@@ -33,6 +35,6 @@ jobs:
           context: .
           push: true
           dockerfile: Dockerfile
-          tags: mammadmodi/websub:${GITHUB_REF##*/}
+          tags: mammadmodi/websub:${{ env.BRANCH }}
       - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
